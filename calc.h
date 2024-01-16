@@ -1,6 +1,12 @@
 #include <iostream>
 #include <stack>
 #include <math.h>
+#include <string>
+
+
+//The more you increase this number the more precise the calculation is
+//Default: 4
+const int PRECISION = 4;
 
 //TODO: add decimal functionality
 class Operation{
@@ -59,13 +65,26 @@ class Operation{
     
     Operation operator+(const Operation& obj) {
         Operation opr;
-        int add = 0, carry = 0, i = 0;
-        int x = this->num;
-        int y = obj.num;
+        double add = 0.0;
+        int carry = 0, i = 0;
+        int x = static_cast<int>(this->num);
+        int y = static_cast<int>(obj.num);
+        double x_d = this->num - x;
+        double y_d = obj.num - y;
+
+        if(x_d + y_d >= 1){
+            carry = 1;
+            add += (x_d + y_d) - 1;
+        }
+        else{
+            add += (x_d + y_d);
+        }
         if(x < 0 || y < 0){
             opr = this->operator-(obj);
             return opr;
         }
+
+        //Integer addition
         while(x > 0 && y > 0){
             int addDig = (x % 10) + (y % 10) + carry;
             if(addDig > 10){
@@ -93,26 +112,29 @@ class Operation{
     }
     Operation operator-(const Operation& obj) {
         Operation opr;
-        int res = 0, minus = 1, subCarry = 0, i = 0;
+        double res = 0.0;
+        int minus = 1, subCarry = 0, i = 0;
         //x will always be the greater number to subtract digits
-        int x = this->num; 
-        int y = obj.num; 
+        int x = static_cast<int>(this->num); 
+        int y = static_cast<int>(obj.num);
+        double x_d = this->num - x;
+        double y_d = obj.num - y; 
         
         //Base case, no subtraction required
-        if(x == 0){
+        if(x == 0 && x_d == 0){
             opr.set(y);
             return opr;
         }
-        else if(y == 0){
+        else if(y == 0 && y_d == 0){
             opr.set(x);
             return opr;
         }
 
         if(x < 0 || y < 0){
-            if(abs(x) > abs(y) && x < 0){
+            if((abs(x) > abs(y) || abs(x_d) > abs(y_d)) && x < 0){
                 minus = -1;
             }
-            else if(abs(y) > abs(x) && y < 0){
+            else if((abs(y) > abs(x) || abs(y_d) > abs(x_d)) && y < 0){
                 minus = -1;
             }
             //If both numbers negative, add them together and multiply by -1
@@ -129,8 +151,17 @@ class Operation{
         }
         if(y > x){
             int temp = y;
+            double temp_d = y_d;
             y = x;
             x = temp;
+            y_d = x_d;
+            x_d = temp_d;
+        }
+        if(abs(x_d) < abs(y_d)){
+            subCarry = -1;
+            res += (1 + abs(x_d) - abs(y_d));
+        }else{
+            res += (abs(x_d) - abs(y_d));
         }
         while(x > 0 && y > 0){
             int addDig = 0;
@@ -213,17 +244,27 @@ class Calculator{
     void parseInput(){
         char sign = '+';
         Operation opr;
-        int num = 0;
-        
+        std::string numStr = "";
+        double num = 0.0;
         for(unsigned int i = 0; i < input.size(); i++){
             char c = input[i];
             if(std::isspace(c)) continue;
-            if(std::isdigit(c)){
+            if(std::isdigit(c) || c == '.'){
                 //Multiply 10 to each digit
+                /*
                 num = 10 * num + (c - '0');
                 opr.set(num);
+                */
+                numStr += input[i];
             }
-            if (!std::isdigit(c) || i == input.size() - 1) {
+            //TODO: fix case -1.1+0.9
+            if ((!std::isdigit(c) || i == input.size() - 1) && c != '.') { 
+                if(!numStr.empty()){
+                    numStr = numStr.substr(0, numStr.find('.') + PRECISION);
+                    num += std::stod(numStr);
+                    opr.set(num);
+                }
+                
                 switch (sign) {
                     case '+': {
                         operations.push(opr);
@@ -250,7 +291,8 @@ class Calculator{
                     }
                 }
                 sign = c;
-                num = 0;
+                numStr = "";
+                num = 0.0;
             }
         }
     }
