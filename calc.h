@@ -8,7 +8,6 @@
 //Default: 4
 const int PRECISION = 4;
 
-//TODO: add decimal functionality
 class Operation{
     private:
     double num;
@@ -201,7 +200,7 @@ class Operation{
     }  
     Operation operator/(const Operation& obj) {//Newton-raphson algorithm for division
         Operation opr;
-        double x = this->num, y = obj.num;
+        double x = obj.num, y = this->num; //Flipped to adjust for the stack
         double reciprocal_estimate = 1 / y;
         int max_iterations = 1000;
 
@@ -234,7 +233,7 @@ class Calculator{
                 if(input[i] != '+' || input[i] != '-'
                 || input[i] != '*' || input[i] != '/'
                 || input[i] != '.' || input[i] != ' '
-                || input[i] != '='){
+                || input[i] != '=' || input[i] != '.'){
                     return false;
                 }
             }
@@ -308,9 +307,6 @@ class Calculator{
     std::cout << "  _____________________\n";
     std::cout << " |  _________________  |\n";
     std::cout << " | |                 | |\n";
-    if(!input.empty()){
-        std::cout << " | |   " + input + "| |\n";
-    }
     std::cout << " | |                 | |\n";
     std::cout << " | |                 | |\n";
     std::cout << " | |                 | |\n";
@@ -323,7 +319,7 @@ class Calculator{
     std::cout << " | |___|___|___| |___| |\n";
     std::cout << " | | 1 | 2 | 3 | | x | |\n";
     std::cout << " | |___|___|___| |___| |\n";
-    std::cout << " | | . | 0 | = | | / | |\n";
+    std::cout << " | | . |   | 0 | | / | |\n";
     std::cout << " | |___|___|___| |___| |\n";
     std::cout << " |_____________________|\n";
     }
